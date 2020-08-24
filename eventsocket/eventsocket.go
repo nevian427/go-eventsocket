@@ -441,11 +441,12 @@ func (h *Connection) Execute(appName, appArg string, lock bool) (*Event, error) 
 
 // ExecuteUUID is similar to Execute, but takes a UUID and no lock. Suitable
 // for use on inbound event socket connections (acting as client).
-func (h *Connection) ExecuteUUID(uuid, appName, appArg string) (*Event, error) {
+func (h *Connection) ExecuteUUID(uuid, appName, appArg, appUUID string) (*Event, error) {
 	return h.SendMsg(MSG{
 		"call-command":     "execute",
 		"execute-app-name": appName,
 		"execute-app-arg":  appArg,
+		"event-uuid":       appUUID,
 	}, uuid, "")
 }
 
