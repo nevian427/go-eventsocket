@@ -46,7 +46,7 @@ type Connection struct {
 	conn          net.Conn
 	reader        *bufio.Reader
 	textreader    *textproto.Reader
-	err           chan error
+	errEv, errReq chan error
 	cmd, api, evt chan *Event
 }
 
@@ -55,7 +55,8 @@ func newConnection(c net.Conn) *Connection {
 	h := Connection{
 		conn:   c,
 		reader: bufio.NewReaderSize(c, bufferSize),
-		err:    make(chan error, 1),
+		errEv:  make(chan error, 1),
+		errReq: make(chan error, 1),
 		cmd:    make(chan *Event),
 		api:    make(chan *Event),
 		evt:    make(chan *Event, eventsBuffer),
@@ -154,31 +155,39 @@ func (h *Connection) readLoop() {
 // readOne reads a single event and send over the appropriate channel.
 // It separates incoming events from api and command responses.
 func (h *Connection) readOne() bool {
-	hdr, err := h.textreader.ReadMIMEHeader()
+	var (
+		err    error
+		length int
+		hdr    textproto.MIMEHeader
+	)
+
+	resp := new(Event)
+	hdr, err = h.textreader.ReadMIMEHeader()
 	if err != nil {
-		h.err <- err
+		h.errEv <- err
 		return false
 	}
-	resp := new(Event)
+
 	resp.Header = make(EventHeader)
 	if v := hdr.Get("Content-Length"); v != "" {
-		length, err := strconv.Atoi(v)
-		if err != nil {
-			h.err <- err
-			return false
+		length, err = strconv.Atoi(v)
+		if err == nil {
+			b := make([]byte, length)
+			if _, err = io.ReadFull(h.reader, b); err != nil {
+				resp.Body = string(b)
+			}
 		}
-		b := make([]byte, length)
-		if _, err := io.ReadFull(h.reader, b); err != nil {
-			h.err <- err
-			return false
-		}
-		resp.Body = string(b)
 	}
+
 	switch hdr.Get("Content-Type") {
 	case "command/reply":
+		if err != nil {
+			h.errReq <- err
+			return false
+		}
 		reply := hdr.Get("Reply-Text")
 		if reply[:2] == "-E" {
-			h.err <- errors.New(reply[5:])
+			h.errReq <- errors.New(reply[5:])
 			return true
 		}
 		if reply[0] == '%' {
@@ -188,30 +197,38 @@ func (h *Connection) readOne() bool {
 		}
 		h.cmd <- resp
 	case "api/response":
+		if err != nil {
+			h.errReq <- err
+			return false
+		}
 		if string(resp.Body[:2]) == "-E" {
-			h.err <- errors.New(string(resp.Body)[5:])
+			h.errReq <- errors.New(string(resp.Body)[5:])
 			return true
 		}
 		copyHeaders(&hdr, resp, false)
 		h.api <- resp
 	case "text/event-plain":
+		if err != nil {
+			h.errEv <- err
+			return false
+		}
 		reader := bufio.NewReader(bytes.NewReader([]byte(resp.Body)))
 		resp.Body = ""
 		textreader := textproto.NewReader(reader)
 		hdr, err = textreader.ReadMIMEHeader()
 		if err != nil {
-			h.err <- err
+			h.errEv <- err
 			return false
 		}
 		if v := hdr.Get("Content-Length"); v != "" {
 			length, err := strconv.Atoi(v)
 			if err != nil {
-				h.err <- err
+				h.errEv <- err
 				return false
 			}
 			b := make([]byte, length)
 			if _, err = io.ReadFull(reader, b); err != nil {
-				h.err <- err
+				h.errEv <- err
 				return false
 			}
 			resp.Body = string(b)
@@ -219,10 +236,14 @@ func (h *Connection) readOne() bool {
 		copyHeaders(&hdr, resp, true)
 		h.evt <- resp
 	case "text/event-json":
+		if err != nil {
+			h.errEv <- err
+			return false
+		}
 		tmp := make(EventHeader)
 		err := json.Unmarshal([]byte(resp.Body), &tmp)
 		if err != nil {
-			h.err <- err
+			h.errEv <- err
 			return false
 		}
 		// capitalize header keys for consistency.
@@ -237,6 +258,10 @@ func (h *Connection) readOne() bool {
 		}
 		h.evt <- resp
 	case "text/disconnect-notice":
+		if err != nil {
+			h.errEv <- err
+			return false
+		}
 		copyHeaders(&hdr, resp, false)
 		h.evt <- resp
 	default:
@@ -261,13 +286,16 @@ func (h *Connection) Close() {
 // When subscribing to events (e.g. `Send("events json ALL")`) it makes no
 // difference to use plain or json. ReadEvent will parse them and return
 // all headers and the body (if any) in an Event struct.
-func (h *Connection) ReadEvent() *Event {
+func (h *Connection) ReadEvent() (*Event, error) {
 	var (
-		ev *Event
+		ev  *Event
+		err error
 	)
 	select {
+	case err = <-h.errEv:
+		return nil, err
 	case ev = <-h.evt:
-		return ev
+		return ev, nil
 	}
 }
 
@@ -333,7 +361,7 @@ func (h *Connection) Send(command string) (*Event, error) {
 		err error
 	)
 	select {
-	case err = <-h.err:
+	case err = <-h.errReq:
 		return nil, err
 	case ev = <-h.cmd:
 		return ev, nil
@@ -404,7 +432,7 @@ func (h *Connection) SendMsg(m MSG, uuid, appData string) (*Event, error) {
 		err error
 	)
 	select {
-	case err = <-h.err:
+	case err = <-h.errReq:
 		return nil, err
 	case ev = <-h.cmd:
 		return ev, nil
