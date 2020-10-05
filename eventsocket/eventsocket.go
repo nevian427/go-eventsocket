@@ -261,16 +261,13 @@ func (h *Connection) Close() {
 // When subscribing to events (e.g. `Send("events json ALL")`) it makes no
 // difference to use plain or json. ReadEvent will parse them and return
 // all headers and the body (if any) in an Event struct.
-func (h *Connection) ReadEvent() (*Event, error) {
+func (h *Connection) ReadEvent() *Event {
 	var (
-		ev  *Event
-		err error
+		ev *Event
 	)
 	select {
-	case err = <-h.err:
-		return nil, err
 	case ev = <-h.evt:
-		return ev, nil
+		return ev
 	}
 }
 
