@@ -173,7 +173,7 @@ func (h *Connection) readOne() bool {
 		length, err = strconv.Atoi(v)
 		if err == nil {
 			b := make([]byte, length)
-			if _, err = io.ReadFull(h.reader, b); err != nil {
+			if _, err = io.ReadFull(h.reader, b); err == nil {
 				resp.Body = string(b)
 			}
 		}
