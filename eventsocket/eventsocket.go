@@ -1,4 +1,5 @@
-// Copyright 2013 Alexandre Fiori
+// Copyright 2013-2018 Alexandre Fiori
+// Copyright 2018-2020 3CLogicInc 
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,8 +10,8 @@
 // connections from FreeSWITCH to control calls.
 //
 // Reference:
-// http://wiki.freeswitch.org/wiki/Event_Socket
-// http://wiki.freeswitch.org/wiki/Event_Socket_Outbound
+// https://freeswitch.org/confluence/display/FREESWITCH/Event+Socket+Library
+// https://freeswitch.org/confluence/display/FREESWITCH/Event+Socket+Outbound
 //
 // WORK IN PROGRESS, USE AT YOUR OWN RISK.
 package eventsocket
