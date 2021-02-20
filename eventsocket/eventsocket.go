@@ -206,7 +206,7 @@ func (h *Connection) readOne() bool {
 			return false
 		}
 		reply := hdr.Get("Reply-Text")
-		if reply[:2] == "-E" {
+		if reply[:1] == "-E" {
 			h.errReq <- errors.New(reply[5:])
 			return true
 		}
@@ -221,7 +221,7 @@ func (h *Connection) readOne() bool {
 			h.errReq <- err
 			return false
 		}
-		if string(resp.Body[:2]) == "-E" {
+		if string(resp.Body[:1]) == "-E" {
 			h.errReq <- errors.New(string(resp.Body)[5:])
 			return true
 		}
