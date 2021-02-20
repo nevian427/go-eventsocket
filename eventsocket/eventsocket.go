@@ -19,7 +19,7 @@ package eventsocket
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
+	jsoniter "github.com/json-iterator/go"
 	"errors"
 	"fmt"
 	"io"
@@ -32,6 +32,8 @@ import (
 	"strings"
 	"time"
 )
+
+var json = jsoniter.ConfigFastest
 
 const bufferSize = 1024 << 6 // For the socket reader
 const eventsBuffer = 16      // For the events channel (memory eater!)
