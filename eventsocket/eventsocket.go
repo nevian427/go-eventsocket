@@ -124,24 +124,41 @@ func Dial(addr, passwd string) (*Connection, error) {
 	if err != nil {
 		return nil, err
 	}
+	return connect(c, passwd)
+}
+
+// DialTimeout acts like Dial but takes a timeout.
+func DialTimeout(addr, passwd string, timeout time.Duration) (*Connection, error) {
+	c, err := net.DialTimeout("tcp", addr, timeout)
+	if err != nil {
+		return nil, err
+	}
+	return connect(c, passwd)
+}
+
+// connect will create a new connection, authenticate and start read loop
+func connect(c net.Conn, passwd string) (*Connection, error) {
 	h := newConnection(c)
 	m, err := h.textreader.ReadMIMEHeader()
 	if err != nil {
-		c.Close()
+		_ = c.Close()
 		return nil, err
 	}
 	if m.Get("Content-Type") != "auth/request" {
 		c.Close()
 		return nil, errMissingAuthRequest
 	}
-	fmt.Fprintf(c, "auth %s\r\n\r\n", passwd)
+	if _, err := fmt.Fprintf(c, "auth %s\r\n\r\n", passwd); err != nil {
+		_ = c.Close()
+		return nil, err
+	}
 	m, err = h.textreader.ReadMIMEHeader()
 	if err != nil {
-		c.Close()
+		_ = c.Close()
 		return nil, err
 	}
 	if m.Get("Reply-Text") != "+OK accepted" {
-		c.Close()
+		_ = c.Close()
 		return nil, errInvalidPassword
 	}
 	go h.readLoop()
