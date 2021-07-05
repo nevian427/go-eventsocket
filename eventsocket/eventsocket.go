@@ -1,5 +1,5 @@
 // Copyright 2013-2018 Alexandre Fiori
-// Copyright 2018-2020 3CLogicInc 
+// Copyright 2018-2020 3CLogicInc
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -19,7 +19,6 @@ package eventsocket
 import (
 	"bufio"
 	"bytes"
-	jsoniter "github.com/json-iterator/go"
 	"errors"
 	"fmt"
 	"io"
@@ -31,6 +30,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 var json = jsoniter.ConfigFastest
@@ -584,7 +585,7 @@ func (h *Connection) SendEvent(m MSG, name, appData string) (*Event, error) {
 		err error
 	)
 	select {
-	case err = <-h.err:
+	case err = <-h.errEv:
 		return nil, err
 	case ev = <-h.cmd:
 		return ev, nil
