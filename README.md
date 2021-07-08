@@ -1,6 +1,10 @@
+## **!!WARNING!!**  Some parts of code maybe incompatible with original!
+
+This cummulative fork from many others. Copyright belong to their respective authors.
+
 # eventsocket
 
-FreeSWITCH [Event Socket](http://wiki.freeswitch.org/wiki/Event_Socket) library
+FreeSWITCH [Event Socket](https://freeswitch.org/confluence/display/FREESWITCH/Event+Socket+Library) library
 for the [Go programming language](http://golang.org).
 
 It supports both inbound and outbound event socket connections, acting either
@@ -14,7 +18,7 @@ your own risk.
 
 Make sure $GOPATH is set, and use the following command to install:
 
-	go get github.com/fiorix/go-eventsocket/eventsocket
+	go get github.com/nevian427/go-eventsocket/eventsocket
 
 The library is currently a single file, so feel free to drop into any project
 without bothering to install.
