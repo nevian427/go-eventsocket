@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/fiorix/go-eventsocket/eventsocket"
+	"github.com/nevian427/go-eventsocket/eventsocket"
 )
 
 const audioFile = "/opt/freeswitch/sounds/en/us/callie/misc/8000/sorry.wav"

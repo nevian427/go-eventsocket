@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/fiorix/go-eventsocket/eventsocket"
+	"github.com/nevian427/go-eventsocket/eventsocket"
 )
 
 const dest = "sofia/internal/1000%127.0.0.1"
