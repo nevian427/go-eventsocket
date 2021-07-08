@@ -366,7 +366,7 @@ func capitalize(s string) string {
 
 // Send sends a single command to the server and returns a response Event.
 //
-// See http://wiki.freeswitch.org/wiki/Event_Socket#Command_Documentation for
+// See https://freeswitch.org/confluence/display/FREESWITCH/Event+Socket+Library#EventSocketLibrary-send for
 // details.
 func (h *Connection) Send(command string) (*Event, error) {
 	// Sanity check to avoid breaking the parser
@@ -394,7 +394,7 @@ func (h *Connection) Send(command string) (*Event, error) {
 // It's supposed to be populated with directives supported by the sendmsg
 // command only, like "call-command: execute".
 //
-// See http://wiki.freeswitch.org/wiki/Event_Socket#sendmsg for details.
+// See https://freeswitch.org/confluence/display/FREESWITCH/Event+Socket+Library#EventSocketLibrary-sendEvent for details.
 type MSG map[string]string
 
 // SendMsg sends messages to FreeSWITCH and returns a response Event.
@@ -415,7 +415,7 @@ type MSG map[string]string
 // Keys with empty values are ignored; uuid and appData are optional.
 // If appData is set, a "content-length" header is expected (lower case!).
 //
-// See http://wiki.freeswitch.org/wiki/Event_Socket#sendmsg for details.
+// See https://freeswitch.org/confluence/display/FREESWITCH/mod_event_socket#mod_event_socket-3.9sendmsg for details.
 func (h *Connection) SendMsg(m MSG, uuid, appData string) (*Event, error) {
 	b := bytes.NewBufferString("sendmsg")
 	if uuid != "" {
@@ -466,7 +466,7 @@ func (h *Connection) SendMsg(m MSG, uuid, appData string) (*Event, error) {
 //
 //	Execute("playback", "/tmp/test.wav", false)
 //
-// See http://wiki.freeswitch.org/wiki/Event_Socket#execute for details.
+// See https://freeswitch.org/confluence/display/FREESWITCH/Event+Socket+Library#EventSocketLibrary-execute for details.
 func (h *Connection) Execute(appName, appArg string, lock bool) (*Event, error) {
 	var evlock string
 	if lock {
